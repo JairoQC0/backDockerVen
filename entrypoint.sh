@@ -8,7 +8,13 @@ echo "📦 Ejecutando migraciones..."
 npx prisma migrate deploy
 
 echo "🌱 Ejecutando seed (si existe)..."
-npx prisma db seed || echo "Seed omitido"
+if [ "$NODE_ENV" != "production" ]; then
+  echo "🌱 Ejecutando seed (entorno no productivo)..."
+  npx prisma db seed || echo "Seed omitido"
+else
+  echo "🚫 Seed deshabilitado en producción"
+fi
+
 
 echo "🚀 Iniciando backend..."
 npm run start
