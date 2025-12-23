@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: ventas-db
+    environment:
+      POSTGRES_USER: ventas
+      POSTGRES_PASSWORD: ventas123
+      POSTGRES_DB: sistema_ventas
+    ports:
+      - "5437:5432"
+    volumes:
+      - ventas_data:/var/lib/postgresql/data
+
+  backend:
+    container_name: ventas-backend
+    build: .
+    ports:
+      - "3119:3000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+volumes:
+  ventas_data:

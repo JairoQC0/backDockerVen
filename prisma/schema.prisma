@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EstadoGeneral {
+  ACTIVO
+  INACTIVO
+}
+
+enum EstadoVenta {
+  ACTIVA
+  ANULADA
+}
+
+enum TipoDocumento {
+  BOLETA
+  CONTROL_INTERNO
+}
+
+model Store {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  createdAt DateTime @default(now())
+
+  stocks ProductStock[]
+  sales  Sale[]
+}
+
+model User {
+  id        Int           @id @default(autoincrement())
+  nombre    String
+  email     String        @unique
+  password  String
+  role      String
+  estado    EstadoGeneral @default(ACTIVO)
+  createdAt DateTime      @default(now())
+
+  sales Sale[]
+}
+
+model Product {
+  id          Int           @id @default(autoincrement())
+  nombre      String
+  precioVenta Decimal       @db.Decimal(10, 2)
+  estado      EstadoGeneral @default(ACTIVO)
+  deletedAt   DateTime?
+  createdAt   DateTime      @default(now())
+
+  stock     ProductStock[]
+  saleItems SaleItem[]
+
+  @@index([estado])
+}
+
+model ProductStock {
+  id        Int @id @default(autoincrement())
+  productId Int
+  storeId   Int
+  cantidad  Int
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  store   Store   @relation(fields: [storeId], references: [id], onDelete: Restrict)
+
+  @@unique([productId, storeId])
+}
+
+model Sale {
+  id            Int           @id @default(autoincrement())
+  storeId       Int
+  userId        Int
+  tipoDocumento TipoDocumento
+  subtotal      Decimal       @db.Decimal(10, 2)
+  total         Decimal       @db.Decimal(10, 2)
+  estado        EstadoVenta   @default(ACTIVA)
+  deletedAt     DateTime?
+  createdAt     DateTime      @default(now())
+
+  store Store      @relation(fields: [storeId], references: [id])
+  user  User       @relation(fields: [userId], references: [id])
+  items SaleItem[]
+
+  @@index([createdAt])
+  @@index([estado])
+}
+
+model SaleItem {
+  id        Int     @id @default(autoincrement())
+  saleId    Int
+  productId Int
+  cantidad  Int
+  precio    Decimal @db.Decimal(10, 2)
+  subtotal  Decimal @db.Decimal(10, 2)
+
+  sale    Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([saleId])
+}
